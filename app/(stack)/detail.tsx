@@ -31,6 +31,8 @@ import Animated, {
   withTiming,
   Easing,
   useAnimatedProps,
+  interpolate,
+  SharedValue,
 } from "react-native-reanimated";
 
 // Create an animated path component
@@ -69,10 +71,12 @@ const AnimatedSvg = memo(
     width,
     animatedStyle,
     dashArray,
+    progress,
   }: {
     width: number;
     animatedStyle: any;
-    dashArray: Animated.SharedValue<number>;
+    dashArray: SharedValue<number>;
+    progress: SharedValue<number>;
   }) => {
     // Create animated props for the Path
     const animatedProps = useAnimatedProps(() => {
@@ -82,8 +86,22 @@ const AnimatedSvg = memo(
       };
     });
 
+    const containerStyle = useAnimatedStyle(() => {
+      return {
+        transform: [
+          {
+            translateY: interpolate(progress.value, [0, 1], [12.5, 0]),
+          },
+          { scale: interpolate(progress.value, [0, 1], [1, 0.7]) },
+        ],
+        transformOrigin: "top left",
+      };
+    });
+
     return (
-      <Animated.View style={[styles.svgContainer, animatedStyle]}>
+      <Animated.View
+        style={[styles.svgContainer, animatedStyle, containerStyle]}
+      >
         <Svg
           viewBox="0 0 1200 800"
           width={width * 0.98}
@@ -1319,10 +1337,18 @@ export default function DetailScreen() {
   const translateY = useSharedValue(0);
   const opacity = useSharedValue(1);
   const dashArray = useSharedValue(10);
+  const progress = useSharedValue(0);
 
   useEffect(() => {
     incrementStat("views");
-  }, [incrementStat]);
+
+    // Start the progress animation to demonstrate the crash
+    progress.value = withRepeat(
+      withTiming(1, { duration: 1500, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+  }, [incrementStat, progress]);
 
   // Effect to handle the animation with Reanimated
   useEffect(() => {
@@ -1392,6 +1418,7 @@ export default function DetailScreen() {
         width={width}
         animatedStyle={animatedStyle}
         dashArray={dashArray}
+        progress={progress}
       />
 
       <View style={styles.buttonsContainer}>
