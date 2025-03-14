@@ -1,4 +1,3 @@
-export const svgXmlData = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="100%" height="100%">
   <defs>
     <!-- Gradients for various elements -->
@@ -429,4 +428,3 @@ export const svgXmlData = `
     <line x1="0" y1="0" x2="-20" y2="0" stroke="#3f51b5" stroke-width="2" />
   </g>
 </svg>
-`;
