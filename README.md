@@ -1,50 +1,223 @@
-# Welcome to your Expo app 👋
+# React Native Performance Anti-Patterns Demo
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This application demonstrates various performance anti-patterns and bad practices in React Native development. It serves as an educational tool to understand what NOT to do in production applications.
 
-## Get started
+## Application Structure
 
-1. Install dependencies
+### Screens
 
-   ```bash
-   npm install
-   ```
+1. **Explore Screen** (`app/(stack)/explore.tsx`)
 
-2. Start the app
+   - Main screen with a scrollable list of 200 SVG elements
+   - Each SVG is interactive and navigates to a detail view
+   - Features a stats display with view counter
+   - Uses global state for styling and interactions
 
-   ```bash
-    npx expo start
-   ```
+2. **Detail Screen** (`app/(stack)/detail.tsx`)
+   - Shows a single SVG with animations
+   - Displays interaction statistics
+   - Features blur effects and responsive layout
+   - Uses global state extensively
 
-In the output, you'll find options to open the app in a
+### Components
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+1. **SVG Component** (`assets/svgs/sample.ts`)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+   - Complex SVG with multiple elements
+   - Demonstrates SVG rendering issues
+   - Uses masks, gradients, and paths
 
-## Get a fresh project
+2. **Global State** (`app/context/GlobalState.tsx`)
+   - Centralized state management
+   - Handles theme, animations, preferences, and statistics
 
-When you're ready, run:
+## Performance Issues
 
-```bash
-npm run reset-project
+### 1. Global State Management
+
+#### Issues:
+
+- **Large State Object**: Combines unrelated concerns (theme, animations, preferences, statistics)
+
+```typescript
+interface GlobalState {
+  theme: {
+    /* ... */
+  };
+  animations: {
+    /* ... */
+  };
+  userPreferences: {
+    /* ... */
+  };
+  statistics: {
+    /* ... */
+  };
+}
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+- **Frequent Updates**: State updates every few seconds
+- **Unnecessary Re-renders**: All components re-render when any part of state changes
 
-## Learn more
+#### Impact:
 
-To learn more about developing your project with Expo, look at the following resources:
+- Causes entire component tree to re-render
+- Increases memory usage
+- Reduces app responsiveness
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+### 2. Animation Anti-Patterns
 
-## Join the community
+#### Issues:
 
-Join our community of developers creating universal apps.
+- **Multiple Animated Values**: Using separate values for single animation
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```typescript
+const scale = useSharedValue(0);
+const rotation = useSharedValue(0);
+const translateY = useSharedValue(50);
+const opacity = useSharedValue(0);
+```
+
+- **Complex Animation Chains**: Unnecessarily complex animation sequences
+- **Continuous Animations**: Always-running animations in the background
+
+#### Impact:
+
+- Higher JavaScript bridge traffic
+- Increased CPU usage
+- Battery drain
+
+### 3. SVG Rendering Issues
+
+#### Issues:
+
+- **Odd-numbered Stroke Dash Arrays**: Using odd number of values
+
+```svg
+stroke-dasharray="15,5,35"
+```
+
+- **Non-integer Coordinates**: Using decimal points in paths
+- **Complex Masks and Gradients**: Heavy use of expensive SVG features
+
+#### Impact:
+
+- Inconsistent rendering across devices
+- Increased render time
+- Higher memory usage
+
+### 4. Layout and Styling Issues
+
+#### Issues:
+
+- **Inline Styles**: Heavy use of dynamic styles
+
+```jsx
+style={[
+  styles.container,
+  { backgroundColor: state.theme.backgroundColor }
+]}
+```
+
+- **Complex Shadow Effects**: Multiple shadow properties with blur effects
+- **Dynamic Layout Calculations**: Frequent recalculations based on state
+
+#### Impact:
+
+- Layout thrashing
+- Increased render time
+- Poor scroll performance
+
+### 5. List Rendering Issues
+
+#### Issues:
+
+- **ScrollView for Long Lists**: Using ScrollView instead of FlatList for 200 items
+- **No Virtualization**: All items rendered at once
+- **Complex Item Rendering**: Heavy components in each list item
+
+#### Impact:
+
+- High memory usage
+- Poor initial load time
+- Scrolling performance issues
+
+### 6. Effect Management
+
+#### Issues:
+
+- **Multiple Effects**: Separate effects for related functionality
+
+```typescript
+useEffect(() => {
+  incrementStat("views");
+  const interval = setInterval(() => {
+    setState((prev) => ({
+      /* ... */
+    }));
+  }, 3000);
+}, []);
+```
+
+- **Unnecessary Intervals**: Frequent state updates via intervals
+- **Missing Dependencies**: Incomplete dependency arrays
+
+#### Impact:
+
+- Memory leaks
+- Unnecessary re-renders
+- Potential race conditions
+
+### 7. Event Handling
+
+#### Issues:
+
+- **Multiple State Updates**: Multiple updates in single event handler
+
+```typescript
+const handlePress = (index: number) => {
+  incrementStat("clicks");
+  incrementStat("interactions");
+  updatePreferences({
+    /* ... */
+  });
+};
+```
+
+- **Immediate State Updates**: No debouncing or throttling
+- **Complex Event Chains**: Multiple state changes and animations
+
+#### Impact:
+
+- UI jank
+- Excessive re-renders
+- Poor touch response
+
+## Future Optimizations
+
+The app is designed to be optimized with:
+
+1. React Freeze for preventing unnecessary re-renders
+2. State management optimization
+3. Animation performance improvements
+4. List virtualization
+5. Event handling optimization
+6. SVG optimization
+
+## Getting Started
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Run the app:
+
+```bash
+npm start
+```
+
+## Note
+
+This app intentionally includes bad practices for educational purposes. Do not use these patterns in production applications.
