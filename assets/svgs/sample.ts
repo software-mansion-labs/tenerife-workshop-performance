@@ -15,15 +15,11 @@ export const svgXmlData = `
       <stop offset="100%" style="stop-color:rgba(244,67,54,0.1);stop-opacity:1" />
     </linearGradient>
     
-    <!-- Filter for card shadow -->
-    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="130%">
-      <feDropShadow dx="0" dy="4" stdDeviation="10" flood-color="rgba(0,0,0,0.2)" />
-    </filter>
   </defs>
 
   <!-- Background & Chart Area -->
   <rect width="1200" height="800" fill="#f5f5f5" />
-  <rect x="80" y="50" width="1040" height="650" fill="white" filter="url(#cardShadow)" rx="8" ry="8" />
+  <rect x="80" y="50" width="1040" height="650" fill="white" rx="8" ry="8" />
 
   <!-- Additional path with odd-numbered stroke-dasharray -->
   <path d="M 100 110 L 1100 110" 
